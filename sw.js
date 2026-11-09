@@ -1,5 +1,5 @@
 // Offline-Cache für die App-Hülle. Messdaten liegen in IndexedDB und werden hier nicht berührt.
-var CACHE = 'blutdruck-v1';
+var CACHE = 'blutdruck-v2';
 var FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

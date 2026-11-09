@@ -524,9 +524,23 @@ input::placeholder { color: var(--ink-2); opacity: .5; }
   function renderAll() { renderSummary(); drawChart(); renderLog(); }
 
   /* ---------- Aktionen ---------- */
-  function resetForm() {
+  // Datum/Uhrzeit laufen automatisch mit, solange der Nutzer sie nicht selbst geändert hat.
+  var timeTouched = false;
+  function setNow() {
     var n = nowParts();
     $('#f-date').value = n.date; $('#f-time').value = n.time;
+    timeTouched = false;
+  }
+  function tickNow() {
+    if (timeTouched) return;
+    var a = document.activeElement;
+    if (a && (a.id === 'f-date' || a.id === 'f-time')) return;
+    var n = nowParts();
+    if ($('#f-date').value !== n.date) $('#f-date').value = n.date;
+    if ($('#f-time').value !== n.time) $('#f-time').value = n.time;
+  }
+  function resetForm() {
+    setNow();
     $('#f-sys').value = ''; $('#f-dia').value = ''; $('#f-pulse').value = ''; $('#f-note').value = '';
   }
   async function addReading(ev) {
@@ -648,7 +662,17 @@ input::placeholder { color: var(--ink-2); opacity: .5; }
 
   /* ---------- Ereignisse ---------- */
   $('#entry').addEventListener('submit', addReading);
-  $('#nowBtn').addEventListener('click', function () { $('#f-time').value = nowParts().time; $('#f-date').value = nowParts().date; });
+  $('#nowBtn').addEventListener('click', setNow);
+  ['#f-date', '#f-time'].forEach(function (sel) {
+    $(sel).addEventListener('input', function () { timeTouched = true; });
+    $(sel).addEventListener('change', function () { timeTouched = true; });
+  });
+  // Uhrzeit aktuell halten: sekündlich prüfen und beim Zurückkehren in die App (iOS friert Timer im Hintergrund ein).
+  setInterval(tickNow, 1000);
+  function onResume() { if (document.visibilityState === 'visible') { tickNow(); renderAll(); } }
+  document.addEventListener('visibilitychange', onResume);
+  window.addEventListener('pageshow', onResume);
+  window.addEventListener('focus', tickNow);
   $('#exportBtn').addEventListener('click', exportCsv);
   $('#importBtn').addEventListener('click', function () { $('#importFile').click(); });
   $('#importFile').addEventListener('change', function (e) { importCsv(e.target.files && e.target.files[0]); });
